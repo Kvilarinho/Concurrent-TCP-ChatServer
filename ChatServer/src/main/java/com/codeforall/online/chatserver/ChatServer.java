@@ -1,9 +1,12 @@
 package com.codeforall.online.chatserver;
 
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Classe principal responsável por aceitar conexões de clients,
@@ -14,6 +17,10 @@ public class ChatServer {
 
     private final int port;
     private final CopyOnWriteArrayList<ClientHandler> clients = new CopyOnWriteArrayList<>();
+
+    private ServerSocket serverSocket;
+    private volatile boolean running = false;
+    private final ExecutorService clientPool = Executors.newCachedThreadPool();
 
     public ChatServer(int port) {
         this.port = port;
@@ -27,20 +34,28 @@ public class ChatServer {
      */
     public void init() throws IOException {
 
-        ServerSocket serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket(port);
+        running = true;
         System.out.println("Chat server listening on port: " + port);
 
-        while (true) {
-            Socket clientSocket = serverSocket.accept();
-            ClientHandler client = new ClientHandler(this, clientSocket);
-            clients.add(client);
+        try {
+            while (running) {
+                Socket clientSocket = serverSocket.accept();
 
-            String clientAdress = "[" + clientSocket.getInetAddress().toString() + ":" + clientSocket.getPort() + "]";
-            new Thread(client, "Client - " + clientAdress).start();
-            System.out.println(Thread.currentThread().getName());
+                ClientHandler client = new ClientHandler(this, clientSocket);
+                clients.add(client);
 
+                String clientAdress = "[" + clientSocket.getInetAddress().toString() + ":" + clientSocket.getPort() + "]";
+
+                clientPool.submit(client);
+                System.out.println("Client connected: " + clientAdress);
+            }
+        } finally {
+
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
         }
-
     }
 
     /**
@@ -95,6 +110,22 @@ public class ChatServer {
             sb.append(client.getName() + "\n");
         }
         return sb.toString();
+    }
+
+    public void shutdown() {
+        running = false;
+
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            System.out.println("Error closing server socket: " + e.getMessage());
+        }
+
+        clientPool.shutdownNow();
+
+        broadcast("Server is shutting down...");
     }
 
 
