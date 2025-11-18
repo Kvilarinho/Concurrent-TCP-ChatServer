@@ -20,6 +20,8 @@ public class ClientHandler implements Runnable{
     private String name = "Anonymous";
     private final Map<String, Commands> commandsMap = new HashMap<>();
 
+    private boolean admin = false;
+
     public ClientHandler(ChatServer server, Socket clientSocket) {
         this.server = server;
         this.clientSocket = clientSocket;
@@ -144,5 +146,13 @@ public class ClientHandler implements Runnable{
 
     public String getName() {
         return name;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }
