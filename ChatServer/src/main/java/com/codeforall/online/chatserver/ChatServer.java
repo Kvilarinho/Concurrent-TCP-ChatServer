@@ -20,6 +20,8 @@ public class ChatServer {
 
     private ServerSocket serverSocket;
     private volatile boolean running = false;
+
+    private static final String ADMIN_PASSWORD = "supersecret";
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
 
     public ChatServer(int port) {
@@ -110,6 +112,10 @@ public class ChatServer {
             sb.append(client.getName() + "\n");
         }
         return sb.toString();
+    }
+
+    public boolean isValidAdminPassword(String password) {
+        return ADMIN_PASSWORD.equals(password);
     }
 
     public void shutdown() {

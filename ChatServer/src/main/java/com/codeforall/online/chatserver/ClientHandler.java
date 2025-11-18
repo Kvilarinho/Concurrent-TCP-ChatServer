@@ -3,6 +3,7 @@ package com.codeforall.online.chatserver;
 import com.codeforall.online.chatserver.commands.*;
 import com.codeforall.online.chatserver.exceptions.CommandNotFoundException;
 import com.codeforall.online.chatserver.exceptions.InvalidCommandArgumentsException;
+import com.codeforall.online.chatserver.exceptions.UnauthorizedCommandException;
 import com.codeforall.online.chatserver.exceptions.UserNotFoundException;
 
 import java.io.*;
@@ -34,6 +35,8 @@ public class ClientHandler implements Runnable{
         commandsMap.put("/list", new ListCommand());
         commandsMap.put("/name", new NameCommand());
         commandsMap.put("/whisper", new WhisperCommand());
+        commandsMap.put("/admin", new AdminLoginCommand());
+        commandsMap.put("/shutdown", new ShutdownCommand());
     }
 
     @Override
@@ -45,7 +48,7 @@ public class ClientHandler implements Runnable{
             writer.println("Welcome to the chat! Enter your username:");
             checkUsername();
 
-            writer.println("Hello, " + this.name + "! You can start chatting now." +
+            writer.println("Hello, " + this.name + "!\nYou can start chatting now.\n" +
                     "Please use /quit when you wish to exit the chat and /help to list all the available commands");
             server.broadcast(this.name + " has entered the chat.");
 
@@ -61,7 +64,7 @@ public class ClientHandler implements Runnable{
                         handleCommands(message);
                     } catch (CommandNotFoundException |
                              InvalidCommandArgumentsException |
-                             UserNotFoundException e) {
+                             UserNotFoundException | UnauthorizedCommandException e) {
                         send(e.getMessage());
                     }
                     continue;
@@ -110,11 +113,14 @@ public class ClientHandler implements Runnable{
     private void checkUsername() throws IOException {
         while (name.equalsIgnoreCase( "Anonymous")) {
 
-            String maybeName = reader.readLine().trim();
+            String maybeName = reader.readLine();
 
             if (maybeName == null) {
                 throw new IOException("Client disconnected before choosing username");
             }
+
+            maybeName = maybeName.trim();
+
             if (maybeName.length() > 3) {
                 this.name = maybeName;
             } else {
