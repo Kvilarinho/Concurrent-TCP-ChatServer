@@ -133,7 +133,7 @@ public class ChatServer {
         running = false;
 
         for (ClientHandler client: clients) {
-            client.close();
+            client.shutdownCleanUp();
         }
 
         clients.clear();
