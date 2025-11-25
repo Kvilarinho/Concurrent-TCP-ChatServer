@@ -77,21 +77,23 @@ public class ClientHandler implements Runnable{
             System.out.println("Connection lost with client : " + clientSocket + ": " + e.getMessage());
 
         } finally {
-            cleanUp();
+            close();
         }
     }
 
-    private void cleanUp() {
+    public void close() {
         closeStreams();
         server.removeClient(this);
-        server.broadcast(this.name + " left the chat");
+        if (server.isRunning()) {
+            server.broadcast(this.name + " left the chat");
+        }
     }
 
     private void closeStreams() {
         try {
-            clientSocket.close();
             if (reader != null) reader.close();
             if (writer != null) writer.close();
+            if (!clientSocket.isClosed()) clientSocket.close();
 
         } catch (IOException e) {
             e.printStackTrace();

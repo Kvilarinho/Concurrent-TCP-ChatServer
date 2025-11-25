@@ -19,11 +19,12 @@ public class ChatServer {
     private final CopyOnWriteArrayList<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     private ServerSocket serverSocket;
+
     private volatile boolean running = false;
 
     private static final String ADMIN_PASSWORD = "supersecret";
-    private final ExecutorService clientPool = Executors.newCachedThreadPool();
 
+    private final ExecutorService clientPool = Executors.newCachedThreadPool();
     public ChatServer(int port) {
         this.port = port;
     }
@@ -34,31 +35,41 @@ public class ChatServer {
      *
      * @throws IOException se ocorrer erro ao criar o ServerSocket
      */
-    public void init() throws IOException {
-
-        serverSocket = new ServerSocket(port);
-        running = true;
-        System.out.println("Chat server listening on port: " + port);
-
+    public void init() {
         try {
+            serverSocket = new ServerSocket(port);
+            running = true;
+            System.out.println("Chat server listening on port: " + port);
+
             while (running) {
-                Socket clientSocket = serverSocket.accept();
-
-                ClientHandler client = new ClientHandler(this, clientSocket);
-                clients.add(client);
-
-                String clientAdress = "[" + clientSocket.getInetAddress().toString() + ":" + clientSocket.getPort() + "]";
-
-                clientPool.submit(client);
-                System.out.println("Client connected: " + clientAdress);
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    ClientHandler client = new ClientHandler(this, clientSocket);
+                    clients.add(client);
+                    String clientAddress = "[" + clientSocket.getInetAddress() + ":" + clientSocket.getPort() + "]";
+                    clientPool.submit(client);
+                    System.out.println("Client connected: " + clientAddress);
+                } catch (IOException e) {
+                    if (!running) {
+                        System.out.println("Server stopped.");
+                        break;
+                    }
+                    System.out.println("Error accepting client: " + e.getMessage());
+                }
             }
+        } catch (IOException e) {
+            System.out.println("Could not start server: " + e.getMessage());
         } finally {
-
-            if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close();
+            try {
+                if (serverSocket != null && !serverSocket.isClosed()) {
+                    serverSocket.close();
+                }
+            } catch (IOException e) {
+                System.out.println("Error closing server socket: " + e.getMessage());
             }
         }
     }
+
 
     /**
      * Responsável por enviar mensagem para todos os clientes conectados.
@@ -121,6 +132,12 @@ public class ChatServer {
     public void shutdown() {
         running = false;
 
+        for (ClientHandler client: clients) {
+            client.close();
+        }
+
+        clients.clear();
+
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
@@ -131,7 +148,12 @@ public class ChatServer {
 
         clientPool.shutdownNow();
 
-        broadcast("Server is shutting down...");
+        System.out.println("Server shutdown complete.");
+
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
 
@@ -141,11 +163,7 @@ public class ChatServer {
      * @param args
      */
     public static void main(String[] args) {
-
-        try {
-            new ChatServer(9001).init();
-        } catch (IOException e) {
-            System.out.println("Server error: " + e.getMessage());
-        }
+        new ChatServer(9001).init();
     }
+
 }
