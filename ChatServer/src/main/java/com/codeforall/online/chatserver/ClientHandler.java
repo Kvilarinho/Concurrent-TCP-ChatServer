@@ -55,7 +55,8 @@ public class ClientHandler implements Runnable{
             String message;
             while ((message = reader.readLine()) != null) {
 
-                if (message.startsWith("/quit")) {
+                if (message.equalsIgnoreCase("/quit")) {
+                    writer.println("Bye");
                     break;
                 }
 
@@ -77,16 +78,24 @@ public class ClientHandler implements Runnable{
             System.out.println("Connection lost with client : " + clientSocket + ": " + e.getMessage());
 
         } finally {
-            close();
+            cleanUp();
         }
     }
 
-    public void close() {
+    private void cleanUp(boolean notifyOthers) {
         closeStreams();
         server.removeClient(this);
-        if (server.isRunning()) {
+        if (notifyOthers && server.isRunning()) {
             server.broadcast(this.name + " left the chat");
         }
+    }
+
+    private void cleanUp() {
+        cleanUp(true);
+    }
+
+    public void shutdownCleanUp() {
+        cleanUp(false);
     }
 
     private void closeStreams() {
