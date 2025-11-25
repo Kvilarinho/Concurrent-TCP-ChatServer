@@ -67,6 +67,9 @@ public class ChatServer {
             } catch (IOException e) {
                 System.out.println("Error closing server socket: " + e.getMessage());
             }
+
+            clientPool.shutdownNow();
+            System.out.println("Server fully terminated.");
         }
     }
 
@@ -145,10 +148,6 @@ public class ChatServer {
         } catch (IOException e) {
             System.out.println("Error closing server socket: " + e.getMessage());
         }
-
-        clientPool.shutdownNow();
-
-        System.out.println("Server shutdown complete.");
 
     }
 

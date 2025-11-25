@@ -16,6 +16,7 @@ public class WhisperCommand implements Commands {
         String user = parts[1];
         String msg = parts[2];
         boolean ok = handler.getServer().whisper(user, msg, handler);
+        handler.send(handler.getName() + " (whisper): " + msg);
         if (!ok) {
             throw new UserNotFoundException("User not found");
         }
