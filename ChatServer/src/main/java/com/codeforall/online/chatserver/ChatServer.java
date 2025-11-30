@@ -1,6 +1,5 @@
 package com.codeforall.online.chatserver;
 
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,9 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Classe principal responsável por aceitar conexões de clients,
- * manter os clientes conectados numa lista e realizar broadcast
- * ou enviar mensagens privadas.
+ * Main server class responsible for accepting client connections,
+ * managing the list of connected clients, and broadcasting messages.
  */
 public class ChatServer {
 
@@ -19,21 +17,24 @@ public class ChatServer {
     private final CopyOnWriteArrayList<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     private ServerSocket serverSocket;
-
     private volatile boolean running = false;
 
     private static final String ADMIN_PASSWORD = "supersecret";
 
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
+
+    /**
+     * Creates a new chat server on the given port.
+     *
+     * @param port the port to listen on
+     */
     public ChatServer(int port) {
         this.port = port;
     }
 
     /**
-     * Aguarda conexões dos clients, adiciona-os à lista
-     * e inicializa uma nova thread para cada cliente.
-     *
-     * @throws IOException se ocorrer erro ao criar o ServerSocket
+     * Starts the server loop, accepts incoming clients,
+     * and launches a dedicated handler thread for each connection.
      */
     public void init() {
         try {
@@ -44,11 +45,16 @@ public class ChatServer {
             while (running) {
                 try {
                     Socket clientSocket = serverSocket.accept();
+
                     ClientHandler client = new ClientHandler(this, clientSocket);
                     clients.add(client);
-                    String clientAddress = "[" + clientSocket.getInetAddress() + ":" + clientSocket.getPort() + "]";
+
                     clientPool.submit(client);
-                    System.out.println("Client connected: " + clientAddress);
+
+                    System.out.println(
+                            "Client connected: [" + clientSocket.getInetAddress()
+                                    + ":" + clientSocket.getPort() + "]");
+
                 } catch (IOException e) {
                     if (!running) {
                         System.out.println("Server stopped.");
@@ -57,9 +63,11 @@ public class ChatServer {
                     System.out.println("Error accepting client: " + e.getMessage());
                 }
             }
+
         } catch (IOException e) {
             System.out.println("Could not start server: " + e.getMessage());
         } finally {
+
             try {
                 if (serverSocket != null && !serverSocket.isClosed()) {
                     serverSocket.close();
@@ -73,11 +81,10 @@ public class ChatServer {
         }
     }
 
-
     /**
-     * Responsável por enviar mensagem para todos os clientes conectados.
+     * Sends a message to all connected clients.
      *
-     * @param message mensagem a enviar
+     * @param message the message to broadcast
      */
     public void broadcast(String message) {
         for (ClientHandler client : clients) {
@@ -86,56 +93,65 @@ public class ChatServer {
     }
 
     /**
-     * Remove o cliente da lista quando desconecta
+     * Removes a disconnected client from the server list.
      *
-     * @param client cliente a remover da lista
+     * @param client the client to remove
      */
     public void removeClient(ClientHandler client) {
         clients.remove(client);
     }
 
     /**
-     * Envia uma mensagem privada (whisper) para um cliente específico.
+     * Sends a private message to a specific client.
      *
-     * @param name    nome do cliente de destino
-     * @param message mensagem a enviar
-     * @param from    cliente que enviou a mensagem
-     * @return true se a mensagem foi enviada com sucesso, false caso o cliente não exista
+     * @param name    target client name
+     * @param message message to send
+     * @param from    origin client
+     * @return true if the message was delivered, false otherwise
      */
     public boolean whisper(String name, String message, ClientHandler from) {
-        String fromClient = from.getName();
+        String fromName = from.getName();
+
         for (ClientHandler client : clients) {
-            String clientName = client.getName();
-            if (clientName.equalsIgnoreCase(name)) {
-                client.send(fromClient + " (whisper): " + message);
+            if (client.getName().equalsIgnoreCase(name)) {
+                client.send(fromName + " (whisper): " + message);
                 return true;
             }
         }
         return false;
     }
 
-
     /**
-     * Retorna uma string com a lista de clientes atualmente online.
+     * Returns a formatted list of all clients currently online.
      *
-     * @return lista formatada de clientes conectados
+     * @return list of connected clients
      */
     public String listClients() {
-        StringBuilder sb = new StringBuilder("Clients online: \n");
+        StringBuilder sb = new StringBuilder("Clients online:\n");
         for (ClientHandler client : clients) {
-            sb.append(client.getName() + "\n");
+            sb.append(client.getName()).append("\n");
         }
         return sb.toString();
     }
 
+    /**
+     * Validates the admin password.
+     *
+     * @param password input password
+     * @return true if correct, false otherwise
+     */
     public boolean isValidAdminPassword(String password) {
         return ADMIN_PASSWORD.equals(password);
     }
 
+    /**
+     * Stops the server, disconnects all clients,
+     * and releases network resources.
+     */
     public void shutdown() {
         running = false;
 
-        for (ClientHandler client: clients) {
+        for (ClientHandler client : clients) {
             client.shutdownCleanUp();
         }
 
@@ -148,21 +164,23 @@ public class ChatServer {
         } catch (IOException e) {
             System.out.println("Error closing server socket: " + e.getMessage());
         }
-
     }
 
+    /**
+     * Checks whether the server is running.
+     *
+     * @return true if running, false otherwise
+     */
     public boolean isRunning() {
         return running;
     }
 
-
     /**
-     * Ponto de entrada do ChatServer
+     * Entry point for starting the ChatServer.
      *
-     * @param args
+     * @param args ignored
      */
     public static void main(String[] args) {
         new ChatServer(9001).init();
     }
-
 }
