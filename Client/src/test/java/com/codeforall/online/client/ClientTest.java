@@ -1,38 +1,44 @@
 package com.codeforall.online.client;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Unit test for simple App.
- */
-public class ClientTest
-    extends TestCase
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public ClientTest(String testName )
-    {
-        super( testName );
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class ClientTest {
+
+    //SUT
+    private Client client;
+
+    @Before
+    public void setUp() {
+        this.client = new Client("localhost", 9001);
     }
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( ClientTest.class );
+    @Test
+    public void constructorShouldStartClientAsRunning() {
+        assertTrue(client.isRunning());
     }
 
-    /**
-     * Rigourous Test :-)
-     */
-    public void testApp()
-    {
-        assertTrue( true );
+    @Test
+    public void shutdownSetRunningFalse() {
+        assertTrue(client.isRunning());
+
+        // when
+        client.shutdown();
+
+        // then
+        assertFalse(client.isRunning());
+    }
+
+    @Test
+    public void shutdownCanBeCalledTwiceWithoutCrashing() {
+
+        // when
+        client.shutdown();
+        client.shutdown();
+
+        assertFalse(client.isRunning());
     }
 }
