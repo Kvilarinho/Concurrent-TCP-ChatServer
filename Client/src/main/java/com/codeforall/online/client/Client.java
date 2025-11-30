@@ -6,6 +6,10 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Simple TCP chat client that connects to a server,
+ * starts reader and keyboard threads, and manages shutdown.
+ */
 public class Client {
 
     private final String host;
@@ -16,11 +20,21 @@ public class Client {
 
     private volatile boolean running = true;
 
+    /**
+     * Creates a new client for a given host and port.
+     *
+     * @param host the server hostname or IP
+     * @param port the server port
+     */
     public Client(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    /**
+     * Starts the client: connects to the server, launches worker threads
+     * and waits for the reader thread to finish.
+     */
     public void start() {
 
         try {
@@ -51,6 +65,10 @@ public class Client {
         }
     }
 
+    /**
+     * Stops the client, closes resources, and prevents new operations.
+     * Method is safe to call multiple times.
+     */
     public synchronized void shutdown() {
 
         if (!running) {
@@ -74,10 +92,20 @@ public class Client {
         System.out.println("Client shutdown complete.");
     }
 
+    /**
+     * Checks if the client is still running.
+     *
+     * @return true if running, false otherwise
+     */
     public boolean isRunning() {
         return running;
     }
 
+    /**
+     * Entry point to start the client application.
+     *
+     * @param args ignored
+     */
     public static void main(String[] args ) {
         new Client("localhost", 9001).start();
     }

@@ -6,16 +6,30 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Thread responsible for reading messages from the server
+ * and printing them to the console.
+ */
 public class ReaderThread implements Runnable {
 
     private final Client client;
     private final Socket socket;
 
+    /**
+     * Creates a new reader thread for a given client and socket.
+     *
+     * @param client the client instance
+     * @param socket the socket connected to the server
+     */
     public ReaderThread(Client client, Socket socket) {
         this.client = client;
         this.socket = socket;
     }
 
+    /**
+     * Continuously reads messages from the server while the client is running.
+     * Stops when the server sends a shutdown message or the connection ends.
+     */
     @Override
     public void run() {
 
