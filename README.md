@@ -122,6 +122,8 @@ Output:
 target/site/apidocs/
 ```
 
+For more projects please visit: https://katiavilarinho.dev
+
 ---
 
 ## Author
