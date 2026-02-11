@@ -128,6 +128,6 @@ target/site/apidocs/
 
 ## Author
 
-Developed by Katia Vilarinho.
-LinkedIn: https://www.linkedin.com/in/kátia-vilarinho
+Developed by Katia Vilarinho.                      
+LinkedIn: https://www.linkedin.com/in/kátia-vilarinho                    
 Portfolio: https://katiavilarinho.dev
