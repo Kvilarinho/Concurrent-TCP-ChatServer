@@ -122,10 +122,12 @@ Output:
 target/site/apidocs/
 ```
 
-For more projects please visit: https://katiavilarinho.dev
+
 
 ---
 
 ## Author
 
 Developed by Katia Vilarinho.
+LinkedIn: https://www.linkedin.com/in/kátia-vilarinho
+Portfolio: https://katiavilarinho.dev
